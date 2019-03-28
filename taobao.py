@@ -3,7 +3,6 @@ import re
 import json
 import time
 from random import choice
-from bs4 import BeautifulSoup
 from prettytable import PrettyTable
 from selenium import webdriver
 
