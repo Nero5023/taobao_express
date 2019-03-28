@@ -9,7 +9,7 @@ from selenium import webdriver
 import Configure
 
 header = {}
-header['user-agent'] =  choice(Configure.FakeUserAgents)
+header['user-agent'] = choice(Configure.FakeUserAgents)
 header['referer'] = 'https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm'
 
 cookies = {}
@@ -17,20 +17,21 @@ print()
 cookiestr = Configure.Cookiestr
 
 for cookie in cookiestr.split(';'):
-    name,value=cookie.strip().split('=',1)  
-    cookies[name]=value
+    name, value = cookie.strip().split('=', 1)
+    cookies[name] = value
+
 
 def getOnePageOrderHistory(pageNum, newURL=None):
     url = "https://buyertrade.taobao.com/trade/itemlist/asyncBought.htm"
     payload = {
-        'action':'itemlist/BoughtQueryAction',
-        'event_submit_do_query':1,
-        '_input_charset':'utf8'
+        'action': 'itemlist/BoughtQueryAction',
+        'event_submit_do_query': 1,
+        '_input_charset': 'utf8'
     }
     formdata = {
-        'pageNum':pageNum,
-        'pageSize':15,
-        'prePageNo':pageNum-1
+        'pageNum': pageNum,
+        'pageSize': 15,
+        'prePageNo': pageNum - 1
     }
 
     # 验证码通过后，新的URL后面会带Token值
@@ -45,9 +46,9 @@ def getOnePageOrderHistory(pageNum, newURL=None):
 
         if response.status_code == requests.codes.ok:
             content = response.text
-            
+
     except Exception as e:
-            print (e)
+        print(e)
 
     # 成功直接获取订单，失败进入验证码流程
     data = json.loads(content)
@@ -56,35 +57,37 @@ def getOnePageOrderHistory(pageNum, newURL=None):
         params = getExpressParams(data.get('mainOrders'))
         for p in params:
             requestExpressPage(p)
-        
+
     else:
         passCodeCheck(data.get('url'), pageNum)
+
 
 # 打印订单信息
 def getOrderDetails(data):
     table = PrettyTable()
     table.field_names = ["ID", "卖家", "名称", "订单创建时间", "价格", "状态", "卖家 ID"]
-    
+
     for order in data:
-        tmp = []
-        #id = 
+        tmp = list()
+        # id =
         tmp.append(order.get('id'))
-        #shopName
+        # shopName
         tmp.append(order.get('seller').get('shopName'))
-        #title
+        # title
         tmp.append(order.get('subOrders')[0].get('itemInfo').get('title'))
-        #createTime
+        # createTime
         tmp.append(order.get('orderInfo').get('createTime'))
-        #actualFee
+        # actualFee
         tmp.append(order.get('payInfo').get('actualFee'))
-        #text
+        # text
         tmp.append(order.get('statusInfo').get('text'))
-        #sellerId
+        # sellerId
         tmp.append(order.get('seller').get('id'))
-        
+
         table.add_row(tmp)
 
-    print (table)
+    print(table)
+
 
 def getExpressParams(data):
     expressParams = []
@@ -96,6 +99,7 @@ def getExpressParams(data):
         expressParams.append(param)
     return expressParams
 
+
 def requestExpressPage(param):
     url = "https://detail.i56.taobao.com/trace/trace_detail.htm"
     try:
@@ -105,10 +109,12 @@ def requestExpressPage(param):
         if response.status_code == requests.codes.ok:
             content = response.text
             # print(content)
-            res = content.split("发货地址：</label>")[1].split('<span class="address">')[1].split('<span class="em">')[0].strip()
+            res = content.split("发货地址：</label>")[1].split('<span class="address">')[1].split('<span class="em">')[
+                0].strip()
             print(res)
     except Exception as e:
         print(e)
+
 
 def passCodeCheck(referer_url, pageNum):
     # 在url中插入style=mini获取包含后续要用到的所有参数的页面
@@ -120,9 +126,9 @@ def passCodeCheck(referer_url, pageNum):
 
         if response.status_code == requests.codes.ok:
             content = response.text
-            
+
     except Exception as e:
-        print (e)
+        print(e)
 
     # 获取identity, sessionid和type
     pattern = re.compile(
@@ -130,7 +136,7 @@ def passCodeCheck(referer_url, pageNum):
         '.*?sessionid: \'(.*?)\''
         '.*?type: \'(.*?)\'.*?}\)', re.S)
     data = pattern.findall(content)
-    
+
     m_identity = data[0][0]
     m_sessionid = data[0][1]
     m_type = data[0][2]
@@ -150,7 +156,7 @@ def passCodeCheck(referer_url, pageNum):
         '.*?captcha: \'(.*?)\''
         '.*?smSign: \'(.*?)\',', re.S)
     data = pattern.findall(content)
-    
+
     m_action = data[0][0]
     m_event_submit_do_unique = data[0][1]
     m_smPolicy = data[0][2]
@@ -171,39 +177,39 @@ def passCodeCheck(referer_url, pageNum):
     murl = "https://sec.taobao.com/query.htm"
 
     mheader = {}
-    mheader['user-agent'] =  choice(Configure.FakeUserAgents)
+    mheader['user-agent'] = choice(Configure.FakeUserAgents)
     mheader['referer'] = url
 
     mpayload = {
-        'action':m_action,
-        'event_submit_do_unique':m_event_submit_do_unique,
-        'smPolicy':m_smPolicy,
-        'smApp':m_smApp,
-        'smReturn':m_smReturn,
-        'smCharset':m_smCharset,
-        'smTag':m_smTag,
-        'captcha':m_captcha,
-        'smSign':m_smSign,
-        'ua':getUA(), # 获取最新的UA
-        'identity':m_identity,
-        'code':m_code,
-        '_ksTS':'{0:d}_39'.format(int(time.time()*1000)),
-        'callback':'jsonp40'
+        'action': m_action,
+        'event_submit_do_unique': m_event_submit_do_unique,
+        'smPolicy': m_smPolicy,
+        'smApp': m_smApp,
+        'smReturn': m_smReturn,
+        'smCharset': m_smCharset,
+        'smTag': m_smTag,
+        'captcha': m_captcha,
+        'smSign': m_smSign,
+        'ua': getUA(),  # 获取最新的UA
+        'identity': m_identity,
+        'code': m_code,
+        '_ksTS': '{0:d}_39'.format(int(time.time() * 1000)),
+        'callback': 'jsonp40'
     }
 
     try:
         response = requests.get(murl, headers=mheader, params=mpayload, cookies=cookies)
         content = None
-        
+
         if response.status_code == requests.codes.ok:
             content = response.text
-            
+
     except Exception as e:
-        print (e)
+        print(e)
 
     pattern = re.compile('{(.*?)}', re.S)
     data = pattern.findall(content)
-    jsond = json.loads('{'+data[0]+'}')
+    jsond = json.loads('{' + data[0] + '}')
 
     # 这个json文件里包含了最后访问用的URL
     murl = jsond.get('url')
@@ -215,28 +221,28 @@ def checkCode(m_identity, m_sessionid, m_type, url):
     murl = "https://pin.aliyun.com/get_img"
 
     mheader = {}
-    mheader['user-agent'] =  choice(Configure.FakeUserAgents)
+    mheader['user-agent'] = choice(Configure.FakeUserAgents)
     mheader['referer'] = url
 
     mpayload = {
-        'identity':m_identity,
-        'sessionid':m_sessionid,
-        'type':m_type,
-        't':int(time.time()*1000)
+        'identity': m_identity,
+        'sessionid': m_sessionid,
+        'type': m_type,
+        't': int(time.time() * 1000)
     }
 
     try:
         response = requests.get(murl, headers=mheader, params=mpayload, cookies=cookies)
         content = None
-        
+
         if response.status_code == requests.codes.ok:
             content = response.content
-            
+
     except Exception as e:
-        print (e)
+        print(e)
 
     # 将验证码图片写入本地
-    with open("codeimg.jpg","wb") as file:
+    with open("codeimg.jpg", "wb") as file:
         file.write(content)
 
     # 输入并验证验证码
@@ -245,34 +251,35 @@ def checkCode(m_identity, m_sessionid, m_type, url):
     murl = "https://pin.aliyun.com/check_img"
 
     mpayload = {
-        'identity':m_identity,
-        'sessionid':m_sessionid,
-        'type':m_type,
-        'code':code,
-        '_ksTS': '{0:d}_29'.format(int(time.time()*1000)),
-        'callback':'jsonp30',
-        'delflag':0
+        'identity': m_identity,
+        'sessionid': m_sessionid,
+        'type': m_type,
+        'code': code,
+        '_ksTS': '{0:d}_29'.format(int(time.time() * 1000)),
+        'callback': 'jsonp30',
+        'delflag': 0
     }
 
     try:
         response = requests.get(murl, headers=mheader, params=mpayload, cookies=cookies)
         content = None
-        
+
         if response.status_code == requests.codes.ok:
             content = response.text
-            
+
     except Exception as e:
-        print (e)
+        print(e)
 
     # 检测是否成功
     # 这里要返回这个验证码，后面会用到
-    pattern = re.compile("SUCCESS",re.S)
+    pattern = re.compile("SUCCESS", re.S)
     data = pattern.findall(content)
 
     if data:
         return True, code
     else:
         return False, code
+
 
 def getUA():
     # 利用PhantomJS模拟浏览器行为
@@ -283,10 +290,10 @@ def getUA():
     driver.close()
 
     return content
-    
+
 
 if __name__ == '__main__':
-    for i in range(1,25):
+    for i in range(1, 25):
         getOnePageOrderHistory(i)
-        print ("抓取第{0:d}页。".format(i))
+        print("抓取第{0:d}页。".format(i))
         time.sleep(2)
